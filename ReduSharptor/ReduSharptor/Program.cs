@@ -72,8 +72,9 @@ namespace ReduceFailingInput
         static void Main(string[] args)
         {
             Console.WriteLine("\n\nReduce Failing Input.");
+            bool hasOutputFile = false;
 
-            if (args.Length != 4)
+            if (args.Length < 3 || args.Length > 4)
             {
                 Console.WriteLine("Incorrect arguments\n");
                 return;
@@ -84,7 +85,17 @@ namespace ReduceFailingInput
                 testExample = Path.GetFullPath(args[0]);
                 testName = args[1];
                 testProj = Path.GetFullPath(args[2]);
+            } 
+
+            // Give the option to pass output params. Otherwise use original file.
+            if (args.Length == 4)
+            {
                 outputFilePath = Path.GetFullPath(args[3]);
+                hasOutputFile = true;
+            }
+            else
+            {
+                outputFilePath = testExample;
             }
 
 
@@ -109,8 +120,11 @@ namespace ReduceFailingInput
             Func<List<StatementSyntax>, bool> buildAndCompareTest = BuildAndRunTest;
 
             // Copy original file to keep a record
-            Extentions.SetTestStatements(testExample, Path.Combine(outputFilePath, "Original", testName + "_" + Path.GetFileName(testExample)), testName, testStatements);
-            Console.WriteLine("Here is the starting file.");
+            if (hasOutputFile)
+            {
+                Extentions.SetTestStatements(testExample, Path.Combine(outputFilePath, "Original", testName + "_" + Path.GetFileName(testExample)), testName, testStatements);
+                Console.WriteLine("Here is the starting file.");
+            }
 
             List<StatementSyntax> simplifiedStatements = new List<StatementSyntax>();
 
@@ -125,14 +139,24 @@ namespace ReduceFailingInput
             }
             finally
             {
-                // Revert the original test file back to the original form
-                Extentions.SetTestStatements(testExample, testExample, testName, testStatements);
-                Console.WriteLine("Reverting the original file.\nHere is the original file");
+                if (hasOutputFile)
+                {
+                    // Revert the original test file back to the original form
+                    Extentions.SetTestStatements(testExample, testExample, testName, testStatements);
+                    Console.WriteLine("Reverting the original file.\nHere is the original file");
+                }
             }
 
 
             // Output test results
-            Extentions.SetTestStatements(testExample, Path.Combine(outputFilePath, "Simplified", testName + "_" + Path.GetFileName(testExample)), testName, simplifiedStatements);
+            if (hasOutputFile)
+            {
+                Extentions.SetTestStatements(testExample, Path.Combine(outputFilePath, "Simplified", testName + "_" + Path.GetFileName(testExample)), testName, simplifiedStatements);
+            }
+            else
+            {
+                Extentions.SetTestStatements(testExample, testExample, testName, simplifiedStatements);
+            }
             Console.WriteLine("Here are the simpified results.");
 
         }

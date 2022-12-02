@@ -90,12 +90,11 @@ namespace ReduSharptor
         #region File Editing
 
         /// <summary>
-        /// Gets the method for the selected unit test to simplify
+        /// Gets the statement list for the test file provided
         /// </summary>
-        /// <param name="testFilePath">File the test is in</param>
-        /// <param name="testName">Name of the test method</param>
-        /// <returns>Method declaration syntax for the method</returns>
-        static public MethodDeclarationSyntax GetTestMethod(string testFilePath, string testName)
+        /// <param name="testFilePath">Test file path for the statement list</param>
+        /// <returns>Statement list for the test provided</returns>
+        static public SyntaxList<StatementSyntax> GetTestStatements(string testFilePath, string testName)
         {
             string text = File.ReadAllText(testFilePath);
             SyntaxTree tree = CSharpSyntaxTree.ParseText(text);
@@ -105,33 +104,21 @@ namespace ReduSharptor
             var classOriginal = (ClassDeclarationSyntax)nameSpaceOriginal.Members[0];
 
             var classMembers = classOriginal.DescendantNodes().OfType<MemberDeclarationSyntax>();
+            MethodDeclarationSyntax method = null;
 
             foreach (var member in classMembers)
             {
-                //var property = member as PropertyDeclarationSyntax;
-                //if (property != null)
-                //    Console.WriteLine("Property: " + property.Identifier);
-                var method = member as MethodDeclarationSyntax;
-                if (method != null)
+                var potentialMethod = member as MethodDeclarationSyntax;
+                if (potentialMethod != null)
                 {
-                    if (method.Identifier.ToString() == testName)
+                    if (potentialMethod.Identifier.ToString() == testName)
                     {
-                        return method;
+                        method = potentialMethod;
                     }
                 }
             }
-            return null;
-        }
 
-        /// <summary>
-        /// Gets the statement list for the test file provided
-        /// </summary>
-        /// <param name="testFilePath">Test file path for the statement list</param>
-        /// <returns>Statement list for the test provided</returns>
-        static public SyntaxList<StatementSyntax> GetTestStatements(string testFilePath, string testName)
-        {
-            var method = GetTestMethod(testFilePath, testName);
-            var blockX = (BlockSyntax)method.Body;
+            var blockX = (BlockSyntax)method?.Body;
 
             return blockX.Statements;
         }
